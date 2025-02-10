@@ -79,7 +79,7 @@ export default function ResultWindow() {
             </div>
             <div className="mt-2 flex items-center text-green-600">
               <ArrowUpRight className="w-4 h-4 mr-1" />
-              <span className="text-sm">Top 5% of test takers</span>
+              <span className="text-sm"></span>
             </div>
           </div>
 

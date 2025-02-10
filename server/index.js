@@ -26,6 +26,9 @@ mongoose.connect('mongodb+srv://rudrakshs:rudrakshs@jee.bymdn.mongodb.net/UserNa
 dotenv.config();
 
 const PORT = process.env.PORT || 4000;
+if (!fs.existsSync('./uploads')) {
+  fs.mkdirSync('./uploads', { recursive: true });
+}
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {

@@ -25,16 +25,15 @@ export default function AuthForm() {
 
     try {
       const response = await fetch(
-        `http://localhost:4000/auth${mode === 'signup' ? '/signup' : '/login'}`,
+        `http://localhost:4000/auth${mode === 'signup' ? '/signup' : '/loginup'}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             email,
             password,
-            firstName,
-            lastName,
-            ...(mode === 'signup' && { firstName, lastName, role }), // Include firstName and lastName only in signup mode
+            ...(mode === 'signup' && { firstName, lastName, role }), // Include firstName, lastName, and role only in signup mode
+            ...(mode === 'login' && { role }), // Include role in login mode
           }),
         }
       );
@@ -48,10 +47,14 @@ export default function AuthForm() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || 'Something went wrong');
 
-      alert(mode === 'signup' ? 'Account created successfully!' : 'Logged in successfully!');
+      alert(mode === 'signup' ? 'Account created successfully! Please login.' : 'Logged in successfully!');
 
       // Navigate based on user role
-      navigate(data.role === 'admin' ? '/admin' : '/exam');
+      if (mode === 'signup') {
+        setMode('login'); // Switch to login form
+      } else {
+        navigate(data.role === 'admin' ? '/admin' : '/exam');
+      }
 
       // Reset form fields
       setFirstName('');
@@ -70,7 +73,7 @@ export default function AuthForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-white-400 to-white-600 flex items-center justify-center p-4">
       <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 bg-white rounded-xl shadow-xl overflow-hidden">
         <div className="p-8">
           <div className="mb-8">
@@ -83,7 +86,7 @@ export default function AuthForm() {
                 : 'Already have an account? '}
               <button
                 onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
-                className="text-purple-600 font-semibold hover:text-purple-700"
+                className="text-blue-600 font-semibold hover:text-blue-700"
               >
                 {mode === 'login' ? 'Sign Up' : 'Login'}
               </button>
@@ -97,7 +100,7 @@ export default function AuthForm() {
                   onClick={() => setRole('user')}
                   className={`flex-1 py-3 px-4 flex items-center justify-center gap-2 transition-all ${
                     role === 'user'
-                      ? 'bg-purple-600 text-white'
+                      ? 'bg-blue-600 text-white'
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
                 >
@@ -108,7 +111,7 @@ export default function AuthForm() {
                   onClick={() => setRole('admin')}
                   className={`flex-1 py-3 px-4 flex items-center justify-center gap-2 transition-all ${
                     role === 'admin'
-                      ? 'bg-purple-600 text-white'
+                      ? 'bg-blue-600 text-white'
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
                 >
@@ -213,7 +216,7 @@ export default function AuthForm() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 focus:ring-4 focus:ring-purple-300 flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-purple-300 flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {loading ? (
                 'Processing...'

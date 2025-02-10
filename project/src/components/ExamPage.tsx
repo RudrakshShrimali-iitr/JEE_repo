@@ -25,39 +25,68 @@ export default function ExamPage() {
   const [Physics, setPhysics] = useState({
     correct: 0,
     wrong: 0,
-    unattempted: 30
+    unattempted: 30,
   });
   const [Chemistry, setChemistry] = useState({
     correct: 0,
     wrong: 0,
-    unattempted: 30
+    unattempted: 30,
   });
   const [Mathematics, setMathematics] = useState({
     correct: 0,
     wrong: 0,
-    unattempted: 30
+    unattempted: 30,
   });
   const [questions, setQuestions] = useState<Question[]>([]);
   const [timeLeft, setTimeLeft] = useState(10800); // 3 hours in seconds
   const navigate = useNavigate();
 
-  useEffect(() => { 
+  useEffect(() => {
+    // Fetch user data from the backend
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch("http://localhost:4000/auth/loginup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          // body: JSON.stringify({ email: "user.email", password: "user.password" , role: "user"}) // Replace with actual email and password
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          console.log("User Data:", data.user); // ✅ User data is received here
+          console.log("JWT Token:", data.jwtToken); // ✅ Token received for authentication
+          setUser(data.user);
+          localStorage.setItem('user', JSON.stringify(data.user)); // Optionally store user data in localStorage
+        } else {
+          console.error("Login failed:", data.message);
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
+  useEffect(() => {
     const fetchExtractedText = async () => {
       try {
         const response = await axios.get<{ filename: string; path: string }>('http://localhost:4000/files');
         const { path } = response.data;
-        const fileUrl = `http://localhost:4000/${path.replace("\\", "/")}`;
+        const fileUrl = `http://localhost:4000/${path.replace('\\', '/')}`;
         const fileResponse = await axios.get(fileUrl, { responseType: 'arraybuffer' });
 
         const arrayBuffer = fileResponse.data as ArrayBuffer;
-        const extractedText = await mammoth.extractRawText({ arrayBuffer })
-          .then(result => result.value)
-          .catch(err => {
+        const extractedText = await mammoth
+          .extractRawText({ arrayBuffer })
+          .then((result) => result.value)
+          .catch((err) => {
             console.error('Mammoth extraction error:', err);
             return '';
           });
 
-        const cleanstring = extractedText.replace(/[\n\r]+/g, " ").replace(/\s+/g, " ").trim();
+        const cleanstring = extractedText.replace(/[\n\r]+/g, ' ').replace(/\s+/g, ' ').trim();
         const parsedQuestions = JSON.parse(cleanstring) as Question[];
         setQuestions(parsedQuestions);
       } catch (error) {
@@ -68,7 +97,7 @@ export default function ExamPage() {
     fetchExtractedText();
 
     const timer = setInterval(() => {
-      setTimeLeft(prev => {
+      setTimeLeft((prev) => {
         if (prev <= 0) {
           clearInterval(timer);
           return 0;
@@ -86,49 +115,57 @@ export default function ExamPage() {
     const secs = seconds % 60;
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
+
   const totaltime = 10800;
   const timeused = totaltime - timeLeft;
 
-  const currentQuestionData = questions.find(q => q.id === String(currentQuestion));
+  const currentQuestionData = questions.find((q) => q.id === String(currentQuestion));
 
   const handleQuestionClick = (questionId: string) => {
     const questionNumber = Number(questionId);
     setCurrentQuestion(questionNumber);
-    setQuestions(prev =>
-      prev.map(q => q.id === questionId ? { ...q, visited: true } : q)
+    setQuestions((prev) =>
+      prev.map((q) => (q.id === questionId ? { ...q, visited: true } : q))
     );
   };
 
   const handleOptionSelect = (optionIndex: number) => {
-    setQuestions(prev =>
-      prev.map(q => q.id === String(currentQuestion) ?
-        { ...q, answered: true, selectedOption: optionIndex } : q
+    setQuestions((prev) =>
+      prev.map((q) =>
+        q.id === String(currentQuestion)
+          ? { ...q, answered: true, selectedOption: optionIndex }
+          : q
       )
     );
     if (currentQuestionData) {
       const subject = currentQuestionData.subject;
-      const isCorrect = optionIndex === currentQuestionData.options.indexOf(currentQuestionData.correct_answer);
+      const isCorrect =
+        optionIndex ===
+        currentQuestionData.options.indexOf(currentQuestionData.correct_answer);
 
       if (subject === 'Physics') {
-        setPhysics(prev => ({
+        setPhysics((prev) => ({
           ...prev,
           correct: isCorrect ? prev.correct + 1 : prev.correct,
           wrong: !isCorrect && optionIndex !== null ? prev.wrong + 1 : prev.wrong,
-          unattempted: !isCorrect && optionIndex === null ? prev.unattempted + 1 : prev.unattempted
+          unattempted:
+            !isCorrect && optionIndex === null ? prev.unattempted + 1 : prev.unattempted,
         }));
       } else if (subject === 'Chemistry') {
-        setChemistry(prev => ({
+        setChemistry((prev) => ({
           ...prev,
           correct: isCorrect ? prev.correct + 1 : prev.correct,
           wrong: !isCorrect && optionIndex !== null ? prev.wrong + 1 : prev.wrong,
-          unattempted: !isCorrect && optionIndex === null ? prev.unattempted + 1 : prev.unattempted
+          unattempted:
+            !isCorrect && optionIndex === null ? prev.unattempted + 1 : prev.unattempted,
         }));
       } else if (subject === 'Mathematics') {
-        setMathematics(prev => ({
+        setMathematics((prev) => ({
           ...prev,
           correct: isCorrect ? prev.correct + 1 : prev.correct,
           wrong: !isCorrect && optionIndex !== null ? prev.wrong + 1 : prev.wrong,
-          unattempted: !isCorrect && optionIndex === null ? prev.unattempted + 1 : prev.unattempted
+          unattempted:
+            !isCorrect && optionIndex === null ? prev.unattempted + 1 : prev.unattempted,
         }));
       }
     }
@@ -138,16 +175,16 @@ export default function ExamPage() {
     const nextQuestion = currentQuestion + 1;
     if (nextQuestion <= questions.length) {
       setCurrentQuestion(nextQuestion);
-      setQuestions(prev =>
-        prev.map(q => q.id === String(nextQuestion) ? { ...q, visited: true } : q)
+      setQuestions((prev) =>
+        prev.map((q) => (q.id === String(nextQuestion) ? { ...q, visited: true } : q))
       );
     }
   };
 
   const handleMarkForReview = (andNext: boolean = false) => {
-    setQuestions(prev =>
-      prev.map(q => q.id === String(currentQuestion) ?
-        { ...q, markedForReview: true } : q
+    setQuestions((prev) =>
+      prev.map((q) =>
+        q.id === String(currentQuestion) ? { ...q, markedForReview: true } : q
       )
     );
     if (andNext) {
@@ -156,9 +193,11 @@ export default function ExamPage() {
   };
 
   const handleClearResponse = () => {
-    setQuestions(prev =>
-      prev.map(q => q.id === String(currentQuestion) ?
-        { ...q, answered: false, selectedOption: null, markedForReview: false } : q
+    setQuestions((prev) =>
+      prev.map((q) =>
+        q.id === String(currentQuestion)
+          ? { ...q, answered: false, selectedOption: null, markedForReview: false }
+          : q
       )
     );
   };
@@ -190,13 +229,6 @@ export default function ExamPage() {
     i18n.changeLanguage(event.target.value);
   };
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-  }, []);
-
   const getQuestionsForSubject = (subject: 'Physics' | 'Chemistry' | 'Mathematics') => {
     if (subject === 'Physics') {
       return questions.slice(0, 30);
@@ -208,7 +240,8 @@ export default function ExamPage() {
     return [];
   };
 
-  const currentSubject = currentQuestion <= 30 ? 'Physics' : currentQuestion <= 60 ? 'Chemistry' : 'Mathematics';
+  const currentSubject =
+    currentQuestion <= 30 ? 'Physics' : currentQuestion <= 60 ? 'Chemistry' : 'Mathematics';
   const questionsForSubject = getQuestionsForSubject(currentSubject);
 
   return (
@@ -218,19 +251,23 @@ export default function ExamPage() {
         <div className="container mx-auto px-4 py-2 flex justify-between items-center">
           <div className="flex items-center gap-2">
             <div className="flex items-center h-16">
-              <div >
+              <div>
                 <div className="bg-white rounded-full p-2">
-                  <div className='flex items-center gap-4'>
-                    <img 
-                      src="/11.jpg" 
-                      alt="Educational Book Logo" 
-                      className='w-16 h-16 rounded-full object-cover'
+                  <div className="flex items-center gap-4">
+                    <img
+                      src="/11.jpg"
+                      alt="Educational Book Logo"
+                      className="w-16 h-16 rounded-full object-cover"
                     />
-                    <span  style={{ fontFamily: 'Lucida Sans, Lucida Sans Regular, Lucida Grande, Lucida Sans Unicode, Geneva, Verdana, sans-serif' }} 
-                className="text-2xl font-bold text-black-600 tracking-wide"
-              >
-                Educating for Better Tomorrow
-              </span>
+                    <span
+                      style={{
+                        fontFamily:
+                          'Lucida Sans, Lucida Sans Regular, Lucida Grande, Lucida Sans Unicode, Geneva, Verdana, sans-serif',
+                      }}
+                      className="text-2xl font-bold text-black-600 tracking-wide"
+                    >
+                      Educating for Better Tomorrow
+                    </span>
                   </div>
                 </div>
               </div>
@@ -240,8 +277,15 @@ export default function ExamPage() {
             <div className="flex items-center gap-2">
               <User className="w-6 h-6" />
               <div>
-                <p className="text-sm">Candidate Name: <span className="font-semibold">{user?.firstName} {user?.lastName}</span></p>
-                <p className="text-sm">Subject: <span className="font-semibold">Test Practice</span></p>
+                <p className="text-sm">
+                  Candidate Name:{' '}
+                  <span className="font-semibold">
+                    {user ? `${user.firstName} ${user.lastName}` : 'Guest'}
+                  </span>
+                </p>
+                <p className="text-sm">
+                  Subject: <span className="font-semibold">Test Practice</span>
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-2 bg-blue-100 px-3 py-1 rounded">
@@ -284,7 +328,7 @@ export default function ExamPage() {
             </button>
             <select className="bg-white text-gray-800 px-4 py-1 rounded" onChange={handleLanguageChange}>
               <option value="en">English</option>
-              <option value="hi">हिन्दी</option>
+              
             </select>
           </div>
         </div>
@@ -330,7 +374,7 @@ export default function ExamPage() {
             <div className='flex gap-x-3'>
               <button
                 onClick={handleNext}
-                className="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600"
+                className="bg-green-700 text-white px-6 py-2 rounded hover:bg-green-600"
               >
                 SAVE & NEXT
               </button>
