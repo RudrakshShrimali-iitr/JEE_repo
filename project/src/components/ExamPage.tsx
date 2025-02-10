@@ -45,10 +45,10 @@ export default function ExamPage() {
     // Fetch user data from the backend
     const fetchUserData = async () => {
       try {
-        const response = await fetch("http://localhost:4000/auth/loginup", {
+        const response = await fetch("http://your-api-url/auth/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          // body: JSON.stringify({ email: "user.email", password: "user.password" , role: "user"}) // Replace with actual email and password
+          body: JSON.stringify({ email: "user@example.com", password: "password" }) // Replace with actual email and password
         });
 
         const data = await response.json();

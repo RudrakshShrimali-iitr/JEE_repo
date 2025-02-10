@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { LogIn, UserPlus, Mail, Lock, User, Shield } from 'lucide-react';
+import { LogIn, UserPlus, Mail, Lock, User, Shield, Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff } from 'lucide-react';
 
 type AuthMode = 'login' | 'signup';
 type UserRole = 'user' | 'admin';
@@ -32,13 +31,12 @@ export default function AuthForm() {
           body: JSON.stringify({
             email,
             password,
-            ...(mode === 'signup' && { firstName, lastName, role }), // Include firstName, lastName, and role only in signup mode
-            ...(mode === 'login' && { role }), // Include role in login mode
+            ...(mode === 'signup' && { firstName, lastName, role }),
+            ...(mode === 'login' && { role }),
           }),
         }
       );
 
-      // Ensure response is JSON before parsing
       const contentType = response.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
         throw new Error('Server returned an invalid response');
@@ -49,14 +47,17 @@ export default function AuthForm() {
 
       alert(mode === 'signup' ? 'Account created successfully! Please login.' : 'Logged in successfully!');
 
-      // Navigate based on user role
+      // Redirect based on user role (force redirect for Admin)
       if (mode === 'signup') {
-        setMode('login'); // Switch to login form
+        setMode('login');
       } else {
-        navigate(data.role === 'admin' ? '/admin' : '/exam');
+        if (role === 'admin') {
+          navigate('/admin'); // **Force redirect to admin**
+        } else {
+          navigate('/exam'); // Redirect to user exam page
+        }
       }
 
-      // Reset form fields
       setFirstName('');
       setLastName('');
       setEmail('');
